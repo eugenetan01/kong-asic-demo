@@ -1,0 +1,2054 @@
+_format_version: "3.0"
+_konnect:
+  control_plane_name: se-eugene-tan
+consumer_groups:
+- name: bronze_tier
+  plugins:
+  - config:
+      compound_identifier: null
+      consumer_groups: null
+      dictionary_name: kong_rate_limiting_counters
+      disable_penalty: false
+      enforce_consumer_groups: false
+      error_code: 429
+      error_message: API rate limit exceeded. Please upgrade your tier to access more
+        API calls.
+      header_name: null
+      hide_client_headers: false
+      identifier: consumer
+      limit:
+      - 5
+      lock_dictionary_name: kong_locks
+      namespace: llGj2winrt64uJbvThCt01phQg0tLHlZ
+      path: null
+      redis:
+        cluster_addresses: null
+        cluster_max_redirections: 5
+        cluster_nodes: null
+        connect_timeout: 2000
+        connection_is_proxied: false
+        database: 0
+        host: 127.0.0.1
+        keepalive_backlog: null
+        keepalive_pool_size: 256
+        password: null
+        port: 6379
+        read_timeout: 2000
+        redis_proxy_type: null
+        send_timeout: 2000
+        sentinel_addresses: null
+        sentinel_master: null
+        sentinel_nodes: null
+        sentinel_password: null
+        sentinel_role: null
+        sentinel_username: null
+        server_name: null
+        ssl: false
+        ssl_verify: false
+        timeout: 2000
+        username: null
+      retry_after_jitter_max: 0
+      strategy: local
+      sync_rate: null
+      window_size:
+      - 60
+      window_type: sliding
+    name: rate-limiting-advanced
+- name: developers
+- name: gold_tier
+  plugins:
+  - config:
+      compound_identifier: null
+      consumer_groups: null
+      dictionary_name: kong_rate_limiting_counters
+      disable_penalty: false
+      enforce_consumer_groups: false
+      error_code: 429
+      error_message: API rate limit exceeded
+      header_name: null
+      hide_client_headers: false
+      identifier: consumer
+      limit:
+      - 10
+      lock_dictionary_name: kong_locks
+      namespace: F0QNZrVrAh4Pei2976OqkGFzTPEjjKm3
+      path: null
+      redis:
+        cluster_addresses: null
+        cluster_max_redirections: 5
+        cluster_nodes: null
+        connect_timeout: 2000
+        connection_is_proxied: false
+        database: 0
+        host: 127.0.0.1
+        keepalive_backlog: null
+        keepalive_pool_size: 256
+        password: null
+        port: 6379
+        read_timeout: 2000
+        redis_proxy_type: null
+        send_timeout: 2000
+        sentinel_addresses: null
+        sentinel_master: null
+        sentinel_nodes: null
+        sentinel_password: null
+        sentinel_role: null
+        sentinel_username: null
+        server_name: null
+        ssl: false
+        ssl_verify: false
+        timeout: 2000
+        username: null
+      retry_after_jitter_max: 0
+      strategy: local
+      sync_rate: null
+      window_size:
+      - 60
+      window_type: sliding
+    name: rate-limiting-advanced
+consumers:
+- acls:
+  - group: aclGroup1
+    tags:
+    - se-konnect-demo
+  groups:
+  - name: bronze_tier
+  keyauth_credentials:
+  - key: acl11
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  username: acl11
+- acls:
+  - group: aclGroup1
+    tags:
+    - se-konnect-demo
+  groups:
+  - name: bronze_tier
+  keyauth_credentials:
+  - key: acl12
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  username: acl12
+- acls:
+  - group: aclGroup2
+    tags:
+    - se-konnect-demo
+  groups:
+  - name: gold_tier
+  keyauth_credentials:
+  - key: acl21
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  username: acl21
+- acls:
+  - group: aclGroup2
+    tags:
+    - se-konnect-demo
+  groups:
+  - name: gold_tier
+  keyauth_credentials:
+  - key: acl22
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  username: acl22
+- groups:
+  - name: developers
+  jwt_secrets:
+  - algorithm: HS256
+    key: jwtkey
+    secret: jwtkey
+  username: jwt
+plugins:
+- config:
+    ai_metrics: false
+    bandwidth_metrics: true
+    latency_metrics: true
+    per_consumer: true
+    status_code_metrics: true
+    upstream_health_metrics: true
+  enabled: true
+  name: prometheus
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+  tags:
+  - se-konnect-demo
+services:
+- connect_timeout: 60000
+  enabled: true
+  host: apollo-service.se-eugene-tan-demo.svc
+  name: apollo-service
+  plugins:
+  - config:
+      content_type: application/json
+      custom_fields_by_lua:
+        streams: "local ts=string.format('%18.0f', os.time()*1000000000) \nlocal log_payload
+          = kong.log.serialize()\nlocal service = log_payload['service'] or 'noService'\nlocal
+          cjson = require \"cjson\" \nlocal payload_string = cjson.encode(log_payload)
+          \nlocal t = { {stream = {gateway='kong-gateway', namespace='se-eugene-tan-demo',
+          service=service['name']}, values={{ts, payload_string}}} } \nreturn t\n"
+      flush_timeout: 2
+      headers: {}
+      http_endpoint: http://loki.observability.svc:3100/loki/api/v1/push
+      keepalive: 60000
+      method: POST
+      queue:
+        concurrency_limit: 1
+        initial_retry_delay: 0.01
+        max_batch_size: 1
+        max_bytes: null
+        max_coalescing_delay: 1
+        max_entries: 10000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: 1
+      retry_count: 10
+      timeout: 10000
+    enabled: true
+    name: http-log
+    protocols:
+    - grpc
+    - grpcs
+    - http
+    - https
+    tags:
+    - se-konnect-demo
+  - config:
+      batch_flush_delay: null
+      batch_span_count: null
+      connect_timeout: 1000
+      header_type: b3
+      headers: null
+      http_response_header_for_traceid: x-kong-traceid
+      logs_endpoint: null
+      propagation:
+        clear: null
+        default_format: w3c
+        extract: null
+        inject: null
+      queue:
+        concurrency_limit: 1
+        initial_retry_delay: 0.01
+        max_batch_size: 200
+        max_bytes: null
+        max_coalescing_delay: 1
+        max_entries: 10000
+        max_retry_delay: 60
+        max_retry_time: 60
+      read_timeout: 5000
+      resource_attributes: null
+      sampling_rate: null
+      send_timeout: 5000
+      traces_endpoint: http://jaeger-collector.observability.svc:4318/v1/traces
+    enabled: true
+    name: opentelemetry
+    protocols:
+    - grpc
+    - grpcs
+    - http
+    - https
+    tags:
+    - se-konnect-demo
+  port: 4000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: graphql
+    path_handling: v0
+    paths:
+    - /graphql
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: counter-app.se-eugene-tan-demo.svc
+  name: counter-app
+  port: 5000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - hosts:
+    - counter-demo-eugenetan01-uarvbjae.kong-sales-engineering.com
+    - counter-failover-eugenetan01-uarvbjae.kong-sales-engineering.com
+    https_redirect_status_code: 426
+    name: counter-app
+    path_handling: v0
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: httpbin.konghq.com
+  name: datakit-default
+  path: /anything
+  port: 443
+  protocol: https
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: datakit-aggregate
+    path_handling: v0
+    paths:
+    - /aggregate-facts
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - datakit
+  tags:
+  - datakit
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: graphqlzero.almansi.me
+  name: graphql-service
+  path: /api
+  port: 443
+  protocol: https
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: graphql-route
+    path_handling: v0
+    paths:
+    - /graphql
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: grpcbin.se-eugene-tan-demo.svc
+  name: grpcbin
+  port: 9000
+  protocol: grpc
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - hosts:
+    - grpc-eugenetan01-uarvbjae.kong-sales-engineering.com
+    https_redirect_status_code: 426
+    name: grpc-echo
+    path_handling: v0
+    paths:
+    - /
+    - /grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo
+    preserve_host: false
+    protocols:
+    - grpc
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: httpbin.se-eugene-tan-demo.svc
+  name: httpbin
+  path: /anything
+  port: 80
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: acl
+    path_handling: v0
+    paths:
+    - /acl
+    plugins:
+    - config:
+        allow:
+        - aclGroup1
+        - aclGroup2
+        always_use_authenticated_groups: false
+        deny: null
+        hide_groups_header: false
+        include_consumer_groups: false
+      enabled: true
+      name: acl
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        anonymous: null
+        hide_credentials: false
+        key_in_body: false
+        key_in_header: true
+        key_in_query: true
+        key_names:
+        - apikey
+        realm: null
+        run_on_preflight: true
+      enabled: true
+      name: key-auth
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      - ws
+      - wss
+      tags:
+      - se-konnect-demo
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: acme
+    path_handling: v0
+    paths:
+    - /acme
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: caching
+    path_handling: v0
+    paths:
+    - /caching
+    plugins:
+    - config:
+        bypass_on_err: false
+        cache_control: false
+        cache_ttl: 300
+        content_type:
+        - text/plain
+        - application/json
+        ignore_uri_case: false
+        memory:
+          dictionary_name: kong_db_cache
+        redis:
+          cluster_addresses: null
+          cluster_max_redirections: 5
+          cluster_nodes: null
+          connect_timeout: 2000
+          connection_is_proxied: false
+          database: 0
+          host: 127.0.0.1
+          keepalive_backlog: null
+          keepalive_pool_size: 256
+          password: null
+          port: 6379
+          read_timeout: 2000
+          send_timeout: 2000
+          sentinel_addresses: null
+          sentinel_master: null
+          sentinel_nodes: null
+          sentinel_password: null
+          sentinel_role: null
+          sentinel_username: null
+          server_name: null
+          ssl: false
+          ssl_verify: false
+          timeout: 2000
+          username: null
+        request_method:
+        - GET
+        - HEAD
+        response_code:
+        - 200
+        - 301
+        - 404
+        response_headers:
+          X-Cache-Key: true
+          X-Cache-Status: true
+          age: true
+        storage_ttl: null
+        strategy: memory
+        vary_headers: null
+        vary_query_params: null
+      enabled: true
+      name: proxy-cache-advanced
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: canary
+    path_handling: v0
+    paths:
+    - /canary
+    plugins:
+    - config:
+        canary_by_header_name: null
+        duration: 3600
+        groups: null
+        hash: none
+        hash_header: null
+        percentage: 50
+        start: null
+        steps: 3600
+        upstream_fallback: false
+        upstream_host: mockbin.se-kong-mesh.svc
+        upstream_port: 3000
+        upstream_uri: /request
+      enabled: true
+      name: canary
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: httpbin
+    path_handling: v0
+    paths:
+    - /bin
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: jq
+    path_handling: v0
+    paths:
+    - /jq
+    plugins:
+    - config:
+        request_if_media_type:
+        - application/json
+        request_jq_program: .fahrenheit = .celsius * 1.8 + 32
+        request_jq_program_options:
+          ascii_output: false
+          compact_output: true
+          join_output: false
+          raw_output: false
+          sort_keys: false
+        response_if_media_type:
+        - application/json
+        response_if_status_code:
+        - 200
+        response_jq_program: .headers.jq = "Hello, this is jq"
+        response_jq_program_options:
+          ascii_output: false
+          compact_output: true
+          join_output: false
+          raw_output: false
+          sort_keys: false
+      enabled: true
+      name: jq
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: jwt
+    path_handling: v0
+    paths:
+    - /jwt
+    plugins:
+    - config:
+        allow:
+        - developers
+        always_use_authenticated_groups: false
+        deny: []
+        hide_groups_header: false
+        include_consumer_groups: true
+      enabled: true
+      name: acl
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+    - config:
+        anonymous: null
+        claims_to_verify: null
+        cookie_names: []
+        header_names:
+        - authorization
+        key_claim_name: iss
+        maximum_expiration: 0
+        realm: null
+        run_on_preflight: true
+        secret_is_base64: false
+        uri_param_names:
+        - jwt
+      enabled: true
+      name: jwt
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+  - https_redirect_status_code: 426
+    name: opentelemetry
+    path_handling: v0
+    paths:
+    - /opentelemetry
+    plugins:
+    - config:
+        allow:
+        - aclGroup1
+        always_use_authenticated_groups: false
+        deny: null
+        hide_groups_header: false
+        include_consumer_groups: false
+      enabled: true
+      name: acl
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        echo_downstream: false
+        generator: uuid#counter
+        header_name: Kong-Request-ID
+      enabled: true
+      name: correlation-id
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        content_type: application/json
+        custom_fields_by_lua:
+          streams: "local ts=string.format('%18.0f', os.time()*1000000000) \nlocal
+            log_payload = kong.log.serialize()\nlocal service = log_payload['service']
+            or 'noService'\nlocal cjson = require \"cjson\" \nlocal payload_string
+            = cjson.encode(log_payload) \nlocal t = { {stream = {gateway='kong-gateway',
+            namespace='se-eugene-tan-demo', service=service['name']}, values={{ts,
+            payload_string}}} } \nreturn t\n"
+        flush_timeout: 2
+        headers: {}
+        http_endpoint: http://loki.observability.svc:3100/loki/api/v1/push
+        keepalive: 60000
+        method: POST
+        queue:
+          concurrency_limit: 1
+          initial_retry_delay: 0.01
+          max_batch_size: 1
+          max_bytes: null
+          max_coalescing_delay: 1
+          max_entries: 10000
+          max_retry_delay: 60
+          max_retry_time: 60
+        queue_size: 1
+        retry_count: 10
+        timeout: 10000
+      enabled: true
+      name: http-log
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        anonymous: null
+        hide_credentials: false
+        key_in_body: false
+        key_in_header: true
+        key_in_query: true
+        key_names:
+        - apikey
+        realm: null
+        run_on_preflight: true
+      enabled: true
+      name: key-auth
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        batch_flush_delay: null
+        batch_span_count: null
+        connect_timeout: 1000
+        header_type: b3
+        headers: null
+        http_response_header_for_traceid: x-kong-traceid
+        logs_endpoint: null
+        propagation:
+          clear: null
+          default_format: w3c
+          extract: null
+          inject: null
+        queue:
+          concurrency_limit: 1
+          initial_retry_delay: 0.01
+          max_batch_size: 200
+          max_bytes: null
+          max_coalescing_delay: 1
+          max_entries: 10000
+          max_retry_delay: 60
+          max_retry_time: 60
+        read_timeout: 5000
+        resource_attributes: null
+        sampling_rate: null
+        send_timeout: 5000
+        traces_endpoint: http://jaeger-collector.observability.svc:4318/v1/traces
+      enabled: true
+      name: opentelemetry
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        day: null
+        error_code: 429
+        error_message: API rate limit exceeded
+        fault_tolerant: true
+        header_name: null
+        hide_client_headers: false
+        hour: null
+        limit_by: consumer
+        minute: 100
+        month: null
+        path: null
+        policy: local
+        redis:
+          database: 0
+          host: null
+          password: null
+          port: 6379
+          server_name: null
+          ssl: false
+          ssl_verify: false
+          timeout: 2000
+          username: null
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+        second: null
+        sync_rate: -1
+        year: null
+      enabled: true
+      name: rate-limiting
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        add:
+          body: []
+          headers:
+          - X-Telemetry-Testing:complete
+          querystring: []
+        append:
+          body: []
+          headers: []
+          querystring: []
+        http_method: null
+        remove:
+          body: []
+          headers: []
+          querystring: []
+        rename:
+          body: []
+          headers: []
+          querystring: []
+        replace:
+          body: []
+          headers: []
+          querystring: []
+          uri: null
+      enabled: true
+      name: request-transformer
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    - config:
+        add:
+          headers:
+          - X-Hello-Response:transformed
+          if_status: []
+          json: []
+          json_types: []
+        allow:
+          json: null
+        append:
+          headers: []
+          if_status: []
+          json: []
+          json_types: []
+        dots_in_keys: true
+        remove:
+          headers: []
+          if_status: []
+          json: []
+        rename:
+          headers: []
+          if_status: []
+        replace:
+          body: null
+          headers: []
+          if_status: []
+          json: []
+          json_types: []
+        transform:
+          functions: []
+          if_status: []
+          json: []
+      enabled: true
+      name: response-transformer-advanced
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    preserve_host: false
+    protocols:
+    - http
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: proxy
+    path_handling: v0
+    paths:
+    - /proxy
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: rate-limiting
+    path_handling: v0
+    paths:
+    - /rateLimiting
+    plugins:
+    - config:
+        compound_identifier: null
+        consumer_groups: null
+        dictionary_name: kong_rate_limiting_counters
+        disable_penalty: false
+        enforce_consumer_groups: false
+        error_code: 429
+        error_message: API rate limit exceeded
+        header_name: null
+        hide_client_headers: false
+        identifier: consumer
+        limit:
+        - 2
+        - 10
+        - 1000
+        lock_dictionary_name: kong_locks
+        namespace: se-demo
+        path: null
+        redis:
+          cluster_addresses: null
+          cluster_max_redirections: 5
+          cluster_nodes: null
+          connect_timeout: 2000
+          connection_is_proxied: false
+          database: 0
+          host: 127.0.0.1
+          keepalive_backlog: null
+          keepalive_pool_size: 256
+          password: null
+          port: 6379
+          read_timeout: 2000
+          redis_proxy_type: null
+          send_timeout: 2000
+          sentinel_addresses: null
+          sentinel_master: null
+          sentinel_nodes: null
+          sentinel_password: null
+          sentinel_role: null
+          sentinel_username: null
+          server_name: null
+          ssl: false
+          ssl_verify: false
+          timeout: 2000
+          username: null
+        retry_after_jitter_max: 0
+        strategy: local
+        sync_rate: null
+        window_size:
+        - 1
+        - 60
+        - 3600
+        window_type: sliding
+      enabled: true
+      name: rate-limiting-advanced
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - se-konnect-demo
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - https_redirect_status_code: 426
+    name: route-by-header0
+    path_handling: v0
+    paths:
+    - /routeByHeader
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: httpbin.se-eugene-tan-demo.svc
+  name: httpbin-okta
+  path: /anything
+  port: 80
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: oidc-okta
+    path_handling: v0
+    paths:
+    - /okta
+    plugins:
+    - config:
+        anonymous: null
+        audience: null
+        audience_claim:
+        - aud
+        audience_required: null
+        auth_methods:
+        - password
+        - client_credentials
+        - authorization_code
+        - bearer
+        - introspection
+        - userinfo
+        - kong_oauth2
+        - refresh_token
+        - session
+        authenticated_groups_claim: null
+        authorization_cookie_domain: null
+        authorization_cookie_http_only: true
+        authorization_cookie_name: authorization
+        authorization_cookie_path: /
+        authorization_cookie_same_site: Default
+        authorization_cookie_secure: null
+        authorization_endpoint: null
+        authorization_query_args_client: null
+        authorization_query_args_names: null
+        authorization_query_args_values: null
+        authorization_rolling_timeout: 600
+        bearer_token_cookie_name: null
+        bearer_token_param_type:
+        - header
+        - query
+        - body
+        by_username_ignore_case: false
+        cache_introspection: true
+        cache_token_exchange: true
+        cache_tokens: true
+        cache_tokens_salt: qxMt8Wj7yfTydlTkn7BKcONcNIZSdoqx
+        cache_ttl: 3600
+        cache_ttl_max: null
+        cache_ttl_min: null
+        cache_ttl_neg: null
+        cache_ttl_resurrect: null
+        cache_user_info: true
+        claims_forbidden: null
+        client_alg: null
+        client_arg: client_id
+        client_auth: null
+        client_credentials_param_type:
+        - header
+        - query
+        - body
+        client_id:
+        - '{vault://gcp/kong-okta-oidc-client-id}'
+        client_jwk: null
+        client_secret:
+        - '{vault://gcp/kong-okta-oidc-client-secret}'
+        cluster_cache_redis:
+          cluster_addresses: null
+          cluster_max_redirections: 5
+          cluster_nodes: null
+          connect_timeout: 2000
+          connection_is_proxied: false
+          database: 0
+          host: 127.0.0.1
+          keepalive_backlog: null
+          keepalive_pool_size: 256
+          password: null
+          port: 6379
+          read_timeout: 2000
+          send_timeout: 2000
+          sentinel_addresses: null
+          sentinel_master: null
+          sentinel_nodes: null
+          sentinel_password: null
+          sentinel_role: null
+          sentinel_username: null
+          server_name: null
+          ssl: false
+          ssl_verify: false
+          timeout: 2000
+          username: null
+        cluster_cache_strategy: "off"
+        consumer_by:
+        - username
+        - custom_id
+        consumer_claim: null
+        consumer_optional: false
+        credential_claim:
+        - sub
+        disable_session: null
+        discovery_headers_names: null
+        discovery_headers_values: null
+        display_errors: false
+        domains: null
+        downstream_access_token_header: null
+        downstream_access_token_jwk_header: null
+        downstream_headers_claims: null
+        downstream_headers_names: null
+        downstream_id_token_header: null
+        downstream_id_token_jwk_header: null
+        downstream_introspection_header: null
+        downstream_introspection_jwt_header: null
+        downstream_refresh_token_header: null
+        downstream_session_id_header: null
+        downstream_user_info_header: null
+        downstream_user_info_jwt_header: null
+        dpop_proof_lifetime: 300
+        dpop_use_nonce: false
+        enable_hs_signatures: false
+        end_session_endpoint: null
+        expose_error_code: true
+        extra_jwks_uris: null
+        forbidden_destroy_session: true
+        forbidden_error_message: Forbidden
+        forbidden_redirect_uri: null
+        groups_claim:
+        - groups
+        groups_required:
+        - team-sales-engineers
+        hide_credentials: false
+        http_proxy: null
+        http_proxy_authorization: null
+        http_version: 1.1
+        https_proxy: null
+        https_proxy_authorization: null
+        id_token_param_name: null
+        id_token_param_type:
+        - header
+        - query
+        - body
+        ignore_signature: []
+        introspect_jwt_tokens: false
+        introspection_accept: application/json
+        introspection_check_active: true
+        introspection_endpoint: null
+        introspection_endpoint_auth_method: null
+        introspection_headers_client: null
+        introspection_headers_names: null
+        introspection_headers_values: null
+        introspection_hint: access_token
+        introspection_post_args_client: null
+        introspection_post_args_client_headers: null
+        introspection_post_args_names: null
+        introspection_post_args_values: null
+        introspection_token_param_name: token
+        issuer: https://konghq.okta.com/oauth2/default
+        issuers_allowed: null
+        jwt_session_claim: sid
+        jwt_session_cookie: null
+        keepalive: true
+        leeway: 0
+        login_action: upstream
+        login_methods:
+        - authorization_code
+        login_redirect_mode: fragment
+        login_redirect_uri: null
+        login_tokens:
+        - id_token
+        logout_methods:
+        - POST
+        - DELETE
+        logout_post_arg: null
+        logout_query_arg: null
+        logout_redirect_uri: null
+        logout_revoke: false
+        logout_revoke_access_token: true
+        logout_revoke_refresh_token: true
+        logout_uri_suffix: null
+        max_age: null
+        mtls_introspection_endpoint: null
+        mtls_revocation_endpoint: null
+        mtls_token_endpoint: null
+        no_proxy: null
+        password_param_type:
+        - header
+        - query
+        - body
+        preserve_query_args: false
+        proof_of_possession_auth_methods_validation: true
+        proof_of_possession_dpop: "off"
+        proof_of_possession_mtls: "off"
+        pushed_authorization_request_endpoint: null
+        pushed_authorization_request_endpoint_auth_method: null
+        redirect_uri:
+        - https://proxy-eugenetan01-uarvbjae.kong-sales-engineering.com/okta
+        redis:
+          cluster_addresses: null
+          cluster_max_redirections: 5
+          cluster_nodes: null
+          connect_timeout: 2000
+          connection_is_proxied: false
+          database: 0
+          host: 127.0.0.1
+          keepalive_backlog: null
+          keepalive_pool_size: 256
+          password: null
+          port: 6379
+          prefix: null
+          read_timeout: 2000
+          send_timeout: 2000
+          sentinel_addresses: null
+          sentinel_master: null
+          sentinel_nodes: null
+          sentinel_password: null
+          sentinel_role: null
+          sentinel_username: null
+          server_name: null
+          socket: null
+          ssl: false
+          ssl_verify: false
+          timeout: 2000
+          username: null
+        rediscovery_lifetime: 30
+        refresh_token_param_name: null
+        refresh_token_param_type:
+        - header
+        - query
+        - body
+        refresh_tokens: true
+        require_proof_key_for_code_exchange: null
+        require_pushed_authorization_requests: null
+        require_signed_request_object: null
+        resolve_distributed_claims: false
+        response_mode: query
+        response_type:
+        - code
+        reverify: false
+        revocation_endpoint: null
+        revocation_endpoint_auth_method: null
+        revocation_token_param_name: token
+        roles_claim:
+        - roles
+        roles_required: null
+        run_on_preflight: true
+        scopes:
+        - openid
+        scopes_claim:
+        - scope
+        scopes_required: null
+        search_user_info: false
+        session_absolute_timeout: 86400
+        session_audience: default
+        session_compressor: none
+        session_cookie_domain: null
+        session_cookie_http_only: true
+        session_cookie_maxsize: 4000
+        session_cookie_name: session
+        session_cookie_path: /
+        session_cookie_renew: 600
+        session_cookie_same_site: Lax
+        session_cookie_secure: null
+        session_enforce_same_subject: false
+        session_hash_storage_key: false
+        session_hash_subject: false
+        session_idling_timeout: 900
+        session_memcached_host: 127.0.0.1
+        session_memcached_port: 11211
+        session_memcached_prefix: null
+        session_memcached_socket: null
+        session_redis_cluster_max_redirections: 5
+        session_redis_cluster_nodes: null
+        session_redis_connect_timeout: 2000
+        session_redis_host: 127.0.0.1
+        session_redis_password: null
+        session_redis_port: 6379
+        session_redis_prefix: null
+        session_redis_read_timeout: 2000
+        session_redis_send_timeout: 2000
+        session_redis_server_name: null
+        session_redis_socket: null
+        session_redis_ssl: false
+        session_redis_ssl_verify: false
+        session_redis_username: null
+        session_remember: false
+        session_remember_absolute_timeout: 2592000
+        session_remember_cookie_name: remember
+        session_remember_rolling_timeout: 604800
+        session_request_headers: null
+        session_response_headers: null
+        session_rolling_timeout: 3600
+        session_secret: null
+        session_storage: cookie
+        session_store_metadata: false
+        session_strategy: default
+        ssl_verify: false
+        timeout: 10000
+        tls_client_auth_cert_id: null
+        tls_client_auth_ssl_verify: true
+        token_cache_key_include_scope: false
+        token_endpoint: null
+        token_endpoint_auth_method: null
+        token_exchange_endpoint: null
+        token_headers_client: null
+        token_headers_grants: null
+        token_headers_names: null
+        token_headers_prefix: null
+        token_headers_replay: null
+        token_headers_values: null
+        token_post_args_client: null
+        token_post_args_names: null
+        token_post_args_values: null
+        unauthorized_destroy_session: true
+        unauthorized_error_message: Unauthorized
+        unauthorized_redirect_uri: null
+        unexpected_redirect_uri: null
+        upstream_access_token_header: authorization:bearer
+        upstream_access_token_jwk_header: null
+        upstream_headers_claims:
+        - sub
+        upstream_headers_names:
+        - x-kong-username
+        upstream_id_token_header: null
+        upstream_id_token_jwk_header: null
+        upstream_introspection_header: null
+        upstream_introspection_jwt_header: null
+        upstream_refresh_token_header: null
+        upstream_session_id_header: null
+        upstream_user_info_header: null
+        upstream_user_info_jwt_header: null
+        userinfo_accept: application/json
+        userinfo_endpoint: null
+        userinfo_headers_client: null
+        userinfo_headers_names: null
+        userinfo_headers_values: null
+        userinfo_query_args_client: null
+        userinfo_query_args_names: null
+        userinfo_query_args_values: null
+        using_pseudo_issuer: false
+        verify_claims: true
+        verify_nonce: true
+        verify_parameters: false
+        verify_signature: false
+      enabled: true
+      name: openid-connect
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - oidc-okta
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - oidc-okta
+  - https_redirect_status_code: 426
+    name: oidc-okta-client-creds
+    path_handling: v0
+    paths:
+    - /okta-client-creds
+    plugins:
+    - config:
+        anonymous: null
+        audience: null
+        audience_claim:
+        - aud
+        audience_required: null
+        auth_methods:
+        - client_credentials
+        authenticated_groups_claim: null
+        authorization_cookie_domain: null
+        authorization_cookie_http_only: true
+        authorization_cookie_name: authorization
+        authorization_cookie_path: /
+        authorization_cookie_same_site: Default
+        authorization_cookie_secure: null
+        authorization_endpoint: null
+        authorization_query_args_client: null
+        authorization_query_args_names: null
+        authorization_query_args_values: null
+        authorization_rolling_timeout: 600
+        bearer_token_cookie_name: null
+        bearer_token_param_type:
+        - header
+        - query
+        - body
+        by_username_ignore_case: false
+        cache_introspection: true
+        cache_token_exchange: true
+        cache_tokens: true
+        cache_tokens_salt: mfTC0FqKJUBgdCIeVf3J4QL2ygsNYTv1
+        cache_ttl: 3600
+        cache_ttl_max: null
+        cache_ttl_min: null
+        cache_ttl_neg: null
+        cache_ttl_resurrect: null
+        cache_user_info: true
+        claims_forbidden: null
+        client_alg: null
+        client_arg: client_id
+        client_auth: null
+        client_credentials_param_type:
+        - header
+        - query
+        - body
+        client_id:
+        - '{vault://gcp/kong-okta-sandbox-oidc-clientid}'
+        client_jwk: null
+        client_secret:
+        - '{vault://gcp/kong-okta-sandbox-oidc-clientsecret}'
+        cluster_cache_redis:
+          cluster_addresses: null
+          cluster_max_redirections: 5
+          cluster_nodes: null
+          connect_timeout: 2000
+          connection_is_proxied: false
+          database: 0
+          host: 127.0.0.1
+          keepalive_backlog: null
+          keepalive_pool_size: 256
+          password: null
+          port: 6379
+          read_timeout: 2000
+          send_timeout: 2000
+          sentinel_addresses: null
+          sentinel_master: null
+          sentinel_nodes: null
+          sentinel_password: null
+          sentinel_role: null
+          sentinel_username: null
+          server_name: null
+          ssl: false
+          ssl_verify: false
+          timeout: 2000
+          username: null
+        cluster_cache_strategy: "off"
+        consumer_by:
+        - username
+        - custom_id
+        consumer_claim: null
+        consumer_optional: false
+        credential_claim:
+        - sub
+        disable_session: null
+        discovery_headers_names: null
+        discovery_headers_values: null
+        display_errors: true
+        domains: null
+        downstream_access_token_header: null
+        downstream_access_token_jwk_header: null
+        downstream_headers_claims: null
+        downstream_headers_names: null
+        downstream_id_token_header: null
+        downstream_id_token_jwk_header: null
+        downstream_introspection_header: null
+        downstream_introspection_jwt_header: null
+        downstream_refresh_token_header: null
+        downstream_session_id_header: null
+        downstream_user_info_header: null
+        downstream_user_info_jwt_header: null
+        dpop_proof_lifetime: 300
+        dpop_use_nonce: false
+        enable_hs_signatures: false
+        end_session_endpoint: null
+        expose_error_code: true
+        extra_jwks_uris: null
+        forbidden_destroy_session: true
+        forbidden_error_message: Forbidden
+        forbidden_redirect_uri: null
+        groups_claim:
+        - groups
+        groups_required: null
+        hide_credentials: false
+        http_proxy: null
+        http_proxy_authorization: null
+        http_version: 1.1
+        https_proxy: null
+        https_proxy_authorization: null
+        id_token_param_name: null
+        id_token_param_type:
+        - header
+        - query
+        - body
+        ignore_signature: []
+        introspect_jwt_tokens: false
+        introspection_accept: application/json
+        introspection_check_active: true
+        introspection_endpoint: null
+        introspection_endpoint_auth_method: null
+        introspection_headers_client: null
+        introspection_headers_names: null
+        introspection_headers_values: null
+        introspection_hint: access_token
+        introspection_post_args_client: null
+        introspection_post_args_client_headers: null
+        introspection_post_args_names: null
+        introspection_post_args_values: null
+        introspection_token_param_name: token
+        issuer: https://kong-sandbox.oktapreview.com/oauth2/default
+        issuers_allowed: null
+        jwt_session_claim: sid
+        jwt_session_cookie: null
+        keepalive: true
+        leeway: 0
+        login_action: upstream
+        login_methods:
+        - authorization_code
+        login_redirect_mode: fragment
+        login_redirect_uri: null
+        login_tokens:
+        - id_token
+        logout_methods:
+        - POST
+        - DELETE
+        logout_post_arg: null
+        logout_query_arg: null
+        logout_redirect_uri: null
+        logout_revoke: false
+        logout_revoke_access_token: true
+        logout_revoke_refresh_token: true
+        logout_uri_suffix: null
+        max_age: null
+        mtls_introspection_endpoint: null
+        mtls_revocation_endpoint: null
+        mtls_token_endpoint: null
+        no_proxy: null
+        password_param_type:
+        - header
+        - query
+        - body
+        preserve_query_args: false
+        proof_of_possession_auth_methods_validation: true
+        proof_of_possession_dpop: "off"
+        proof_of_possession_mtls: "off"
+        pushed_authorization_request_endpoint: null
+        pushed_authorization_request_endpoint_auth_method: null
+        redirect_uri: null
+        redis:
+          cluster_addresses: null
+          cluster_max_redirections: 5
+          cluster_nodes: null
+          connect_timeout: 2000
+          connection_is_proxied: false
+          database: 0
+          host: 127.0.0.1
+          keepalive_backlog: null
+          keepalive_pool_size: 256
+          password: null
+          port: 6379
+          prefix: null
+          read_timeout: 2000
+          send_timeout: 2000
+          sentinel_addresses: null
+          sentinel_master: null
+          sentinel_nodes: null
+          sentinel_password: null
+          sentinel_role: null
+          sentinel_username: null
+          server_name: null
+          socket: null
+          ssl: false
+          ssl_verify: false
+          timeout: 2000
+          username: null
+        rediscovery_lifetime: 30
+        refresh_token_param_name: null
+        refresh_token_param_type:
+        - header
+        - query
+        - body
+        refresh_tokens: true
+        require_proof_key_for_code_exchange: null
+        require_pushed_authorization_requests: null
+        require_signed_request_object: null
+        resolve_distributed_claims: false
+        response_mode: query
+        response_type:
+        - code
+        reverify: false
+        revocation_endpoint: null
+        revocation_endpoint_auth_method: null
+        revocation_token_param_name: token
+        roles_claim:
+        - roles
+        roles_required: null
+        run_on_preflight: true
+        scopes:
+        - se_scope
+        scopes_claim:
+        - scope
+        scopes_required: null
+        search_user_info: false
+        session_absolute_timeout: 86400
+        session_audience: default
+        session_compressor: none
+        session_cookie_domain: null
+        session_cookie_http_only: true
+        session_cookie_maxsize: 4000
+        session_cookie_name: session
+        session_cookie_path: /
+        session_cookie_renew: 600
+        session_cookie_same_site: Lax
+        session_cookie_secure: null
+        session_enforce_same_subject: false
+        session_hash_storage_key: false
+        session_hash_subject: false
+        session_idling_timeout: 900
+        session_memcached_host: 127.0.0.1
+        session_memcached_port: 11211
+        session_memcached_prefix: null
+        session_memcached_socket: null
+        session_redis_cluster_max_redirections: 5
+        session_redis_cluster_nodes: null
+        session_redis_connect_timeout: 2000
+        session_redis_host: 127.0.0.1
+        session_redis_password: null
+        session_redis_port: 6379
+        session_redis_prefix: null
+        session_redis_read_timeout: 2000
+        session_redis_send_timeout: 2000
+        session_redis_server_name: null
+        session_redis_socket: null
+        session_redis_ssl: false
+        session_redis_ssl_verify: false
+        session_redis_username: null
+        session_remember: false
+        session_remember_absolute_timeout: 2592000
+        session_remember_cookie_name: remember
+        session_remember_rolling_timeout: 604800
+        session_request_headers: null
+        session_response_headers: null
+        session_rolling_timeout: 3600
+        session_secret: null
+        session_storage: cookie
+        session_store_metadata: false
+        session_strategy: default
+        ssl_verify: false
+        timeout: 10000
+        tls_client_auth_cert_id: null
+        tls_client_auth_ssl_verify: true
+        token_cache_key_include_scope: false
+        token_endpoint: null
+        token_endpoint_auth_method: null
+        token_exchange_endpoint: null
+        token_headers_client: null
+        token_headers_grants: null
+        token_headers_names: null
+        token_headers_prefix: null
+        token_headers_replay: null
+        token_headers_values: null
+        token_post_args_client: null
+        token_post_args_names: null
+        token_post_args_values: null
+        unauthorized_destroy_session: true
+        unauthorized_error_message: Unauthorized
+        unauthorized_redirect_uri: null
+        unexpected_redirect_uri: null
+        upstream_access_token_header: authorization:bearer
+        upstream_access_token_jwk_header: null
+        upstream_headers_claims: null
+        upstream_headers_names: null
+        upstream_id_token_header: null
+        upstream_id_token_jwk_header: null
+        upstream_introspection_header: null
+        upstream_introspection_jwt_header: null
+        upstream_refresh_token_header: null
+        upstream_session_id_header: null
+        upstream_user_info_header: null
+        upstream_user_info_jwt_header: null
+        userinfo_accept: application/json
+        userinfo_endpoint: null
+        userinfo_headers_client: null
+        userinfo_headers_names: null
+        userinfo_headers_values: null
+        userinfo_query_args_client: null
+        userinfo_query_args_names: null
+        userinfo_query_args_values: null
+        using_pseudo_issuer: false
+        verify_claims: true
+        verify_nonce: true
+        verify_parameters: false
+        verify_signature: false
+      enabled: true
+      name: openid-connect
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+      tags:
+      - oidc-okta
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - oidc-okta
+  tags:
+  - oidc-okta
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: httpbin.se-eugene-tan-demo.svc
+  name: httpbin-online
+  path: /anything
+  port: 80
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - headers:
+      online:
+      - "true"
+    https_redirect_status_code: 426
+    name: route-by-header1
+    path_handling: v0
+    paths:
+    - /routeByHeader
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  - headers:
+      version:
+      - v2
+    https_redirect_status_code: 426
+    name: route-by-header2
+    path_handling: v0
+    paths:
+    - /routeByHeader
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: httpbin-upstream
+  name: httpbin-upstream
+  port: 80
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: httpbin-upstream
+    path_handling: v0
+    paths:
+    - /upstream
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: mockbin.se-eugene-tan-demo.svc
+  name: mockbin
+  path: /request
+  port: 3000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: mockbin
+    path_handling: v0
+    paths:
+    - /echo
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: nlp-service.se-eugene-tan-demo.svc
+  name: nlp
+  port: 3000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: nlp
+    path_handling: v0
+    paths:
+    - /nlp
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    tags:
+    - se-konnect-ops
+  tags:
+  - se-konnect-ops
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: blog-service.se-eugene-tan-demo.svc
+  name: reset-db
+  port: 3000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: reset
+    path_handling: v0
+    paths:
+    - /reset
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    tags:
+    - se-konnect-ops
+  tags:
+  - se-konnect-ops
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: users.se-eugene-tan-demo.svc
+  name: users
+  port: 8080
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: users
+    path_handling: v0
+    paths:
+    - /users
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    tags:
+    - se-konnect-ops
+  tags:
+  - se-konnect-ops
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: echo.websocket.org
+  name: websocket-echo
+  path: /
+  port: 443
+  protocol: wss
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: websocket-wss
+    path_handling: v0
+    paths:
+    - /socket-wss
+    preserve_host: false
+    protocols:
+    - wss
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    tags:
+    - se-konnect-demo
+  tags:
+  - se-konnect-demo
+  write_timeout: 60000
+upstreams:
+- algorithm: round-robin
+  hash_fallback: none
+  hash_on: none
+  hash_on_cookie_path: /
+  healthchecks:
+    active:
+      concurrency: 10
+      healthy:
+        http_statuses:
+        - 200
+        - 302
+        interval: 5
+        successes: 5
+      http_path: /
+      https_verify_certificate: true
+      timeout: 1
+      type: http
+      unhealthy:
+        http_failures: 5
+        http_statuses:
+        - 429
+        - 404
+        - 500
+        - 501
+        - 502
+        - 503
+        - 504
+        - 505
+        interval: 5
+        tcp_failures: 5
+        timeouts: 0
+    passive:
+      healthy:
+        http_statuses:
+        - 200
+        - 201
+        - 202
+        - 203
+        - 204
+        - 205
+        - 206
+        - 207
+        - 208
+        - 226
+        - 300
+        - 301
+        - 302
+        - 303
+        - 304
+        - 305
+        - 306
+        - 307
+        - 308
+        successes: 80
+      type: http
+      unhealthy:
+        http_failures: 5
+        http_statuses:
+        - 429
+        - 500
+        - 503
+        tcp_failures: 5
+        timeouts: 5
+    threshold: 0
+  name: httpbin-upstream
+  slots: 10000
+  targets:
+  - target: host.docker.internal:3000
+    weight: 100
+  - target: httpbin.org:80
+    weight: 100
+  use_srv_name: false
